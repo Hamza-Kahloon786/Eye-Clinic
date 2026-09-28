@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-home: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: light;
+  --color-brand: #0284c7;
+  --color-brand-dark: #0369a1;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --sidebar-width: 11.5rem;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  transition-timing-function: var(--ease-standard);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Slim, unobtrusive scrollbars for the contained table/sidebar scroll regions. */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 150ms var(--ease-standard);
+}
+
+.animate-scale-in {
+  animation: scale-in 180ms var(--ease-standard);
+}
+
+/* Gentle floating motion for the homepage hero's floating stat chips. */
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Off-screen content meant only for printing (e.g. a records printout that would
+   otherwise sit uselessly in the page layout). Shown only inside @media print below. */
+.print-only {
+  display: none;
+}
+
+/* Only the element with .print-area (and its contents) renders when printing;
+   everything else on the page -- navbar, modal backdrop, dashboard behind it -- is hidden. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* A4 height minus the @page top/bottom margins above, so short slips stretch to
+       fill the sheet instead of leaving blank space below them. */
+    min-height: calc(297mm - 24mm);
+    display: flex;
+    flex-direction: column;
+  }
+  .print-only {
+    display: block;
+  }
+}
