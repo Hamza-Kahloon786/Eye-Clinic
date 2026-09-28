@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Eye, Printer, Download } from 'lucide-react';
+import { Eye, Printer, Download, Trash2 } from 'lucide-react';
 import DataTable, { EmptyState } from '../common/DataTable';
 import Pagination from '../common/Pagination';
 import Button from '../common/Button';
 
 const PAGE_SIZE = 10;
 
-export default function ClinicalRecordsTable({ records, onView, onPrint, onDownload, emptyMessage }) {
+export default function ClinicalRecordsTable({ records, onView, onPrint, onDownload, onDelete, emptyMessage }) {
   const [page, setPage] = useState(1);
 
   if (records.length === 0) {
@@ -68,6 +68,15 @@ export default function ClinicalRecordsTable({ records, onView, onPrint, onDownl
                       icon={Download}
                       onClick={() => onDownload(r)}
                       aria-label="Download record"
+                      className="px-2.5"
+                    />
+                  )}
+                  {onDelete && (
+                    <Button
+                      variant="danger"
+                      icon={Trash2}
+                      onClick={() => onDelete(r)}
+                      aria-label="Delete record"
                       className="px-2.5"
                     />
                   )}

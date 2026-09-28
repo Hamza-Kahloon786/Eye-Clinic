@@ -182,6 +182,14 @@ const getRecordByToken = asyncHandler(async (req, res) => {
   res.json(record);
 });
 
+const deleteRecord = asyncHandler(async (req, res) => {
+  const record = await ClinicalRecord.findByIdAndDelete(req.params.id);
+  if (!record) {
+    return res.status(404).json({ message: 'Record not found' });
+  }
+  res.json({ message: 'Record deleted' });
+});
+
 module.exports = {
   createRecord,
   getPatientRecords,
@@ -189,4 +197,5 @@ module.exports = {
   getPatientsWithRecords,
   getRecordById,
   getRecordByToken,
+  deleteRecord,
 };

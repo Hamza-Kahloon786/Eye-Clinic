@@ -9,7 +9,7 @@ import PatientRecordsSummaryTable from '../components/records/PatientRecordsSumm
 import ClinicalRecordsTable from '../components/records/ClinicalRecordsTable';
 import RecordDetailModal from '../components/records/RecordDetailModal';
 import PatientRecordsPrintout from '../components/records/PatientRecordsPrintout';
-import { getPatientsWithRecords, getPatientRecords } from '../api/recordApi';
+import { getPatientsWithRecords, getPatientRecords, deleteRecord } from '../api/recordApi';
 
 export default function DoctorRecordsPage() {
   const [query, setQuery] = useState('');
@@ -87,6 +87,21 @@ export default function DoctorRecordsPage() {
     requestAnimationFrame(() => window.print());
   }
 
+  async function handleDeleteRecord(record) {
+    const confirmed = window.confirm(
+      `Delete the ${record.date} record for ${selectedPatient.fullName}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteRecord(record._id);
+      setPatientRecords((prev) => prev.filter((r) => r._id !== record._id));
+      toast.success('Record deleted');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete record');
+    }
+  }
+
   return (
     <Layout>
       <div className="rounded-xl border border-gray-200/70 bg-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md">
@@ -137,6 +152,7 @@ export default function DoctorRecordsPage() {
                   onView={setViewingRecord}
                   onPrint={printRecord}
                   onDownload={printRecord}
+                  onDelete={handleDeleteRecord}
                   emptyMessage={
                     recordDateFilter ? 'No records found for this date.' : 'No clinical records found.'
                   }

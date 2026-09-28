@@ -25,6 +25,11 @@ export async function getPatientRecords(patientId) {
   return data;
 }
 
+export async function deleteRecord(id) {
+  const { data } = await axiosClient.delete(`/records/${id}`);
+  return data;
+}
+
 export async function getRecordByToken(tokenId) {
   try {
     const { data } = await axiosClient.get(`/records/by-token/${tokenId}`);
