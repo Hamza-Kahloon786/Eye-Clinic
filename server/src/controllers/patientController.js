@@ -19,11 +19,28 @@ const searchPatients = asyncHandler(async (req, res) => {
   res.json(patients);
 });
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const createPatient = asyncHandler(async (req, res) => {
   const { fullName, guardianName, age, gender, phone, address } = req.body;
 
-  if (!fullName || age === undefined || !gender || !phone) {
-    return res.status(400).json({ message: 'fullName, age, gender, and phone are required' });
+  if (!fullName || age === undefined || !gender || !phone || !guardianName || !address) {
+    return res.status(400).json({
+      message: 'fullName, guardianName, age, gender, phone, and address are all required',
+    });
+  }
+
+  const duplicate = await Patient.findOne({
+    fullName: new RegExp(`^${escapeRegex(fullName.trim())}$`, 'i'),
+    age: Number(age),
+    phone: phone.trim(),
+  });
+  if (duplicate) {
+    return res.status(409).json({
+      message: `A patient with this name, age, and phone number already exists (${duplicate.mrNumber})`,
+    });
   }
 
   const mrNumber = await generateMrNumber();
@@ -51,6 +68,24 @@ const getPatientById = asyncHandler(async (req, res) => {
 
 const updatePatient = asyncHandler(async (req, res) => {
   const { fullName, guardianName, age, gender, phone, address } = req.body;
+
+  if (!fullName || age === undefined || !gender || !phone || !guardianName || !address) {
+    return res.status(400).json({
+      message: 'fullName, guardianName, age, gender, phone, and address are all required',
+    });
+  }
+
+  const duplicate = await Patient.findOne({
+    _id: { $ne: req.params.id },
+    fullName: new RegExp(`^${escapeRegex(fullName.trim())}$`, 'i'),
+    age: Number(age),
+    phone: phone.trim(),
+  });
+  if (duplicate) {
+    return res.status(409).json({
+      message: `A patient with this name, age, and phone number already exists (${duplicate.mrNumber})`,
+    });
+  }
 
   const patient = await Patient.findByIdAndUpdate(
     req.params.id,

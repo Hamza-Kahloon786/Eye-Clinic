@@ -32,6 +32,7 @@ export default function PatientForm({ onSubmit, onCancel, submitting }) {
         name="guardianName"
         value={form.guardianName}
         onChange={handleChange}
+        required
       />
       <div className="flex gap-3">
         <div className="flex-1">
@@ -52,7 +53,7 @@ export default function PatientForm({ onSubmit, onCancel, submitting }) {
         </label>
       </div>
       <Input label="Phone Number" name="phone" value={form.phone} onChange={handleChange} required />
-      <Input label="Address" name="address" value={form.address} onChange={handleChange} />
+      <Input label="Address" name="address" value={form.address} onChange={handleChange} required />
 
       <div className="mt-2 flex justify-end gap-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
