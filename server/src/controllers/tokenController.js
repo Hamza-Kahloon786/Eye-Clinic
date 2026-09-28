@@ -4,12 +4,24 @@ const getTodayDateString = require('../utils/getTodayDateString');
 const { issueToken } = require('../services/tokenService');
 
 const createToken = asyncHandler(async (req, res) => {
-  const { patientId, fee } = req.body;
+  const { patientId, fee, force } = req.body;
   if (!patientId) {
     return res.status(400).json({ message: 'patientId is required' });
   }
 
-  const token = await issueToken({ patientId, fee, createdBy: req.user.id });
+  let token;
+  try {
+    token = await issueToken({ patientId, fee, createdBy: req.user.id, force });
+  } catch (err) {
+    if (err.code === 'DUPLICATE_TOKEN_TODAY') {
+      return res.status(409).json({
+        message: 'This patient already has a token today',
+        existingTokens: err.existingTokens,
+      });
+    }
+    throw err;
+  }
+
   if (!token) {
     return res.status(404).json({ message: 'Patient not found' });
   }

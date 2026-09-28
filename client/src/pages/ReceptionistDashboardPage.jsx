@@ -101,16 +101,29 @@ export default function ReceptionistDashboardPage() {
     }
   }
 
-  async function handleGenerateToken() {
+  async function handleGenerateToken(force = false) {
     if (!selectedPatient) return;
     try {
-      const token = await createToken(selectedPatient._id, fee);
+      const token = await createToken(selectedPatient._id, fee, force);
       setIssuedToken(token);
       setSelectedPatient(null);
       setResults(null);
       setFee(DEFAULT_CONSULTATION_FEE);
       loadStats();
     } catch (err) {
+      if (err.response?.status === 409) {
+        const existing = err.response.data?.existingTokens || [];
+        const summary = existing
+          .map((t) => `Token #${t.tokenNumber} (${t.status})`)
+          .join(', ');
+        const confirmed = window.confirm(
+          `${selectedPatient.fullName} already has a token today: ${summary || 'an existing token'}.\n\nGenerate another token anyway?`
+        );
+        if (confirmed) {
+          handleGenerateToken(true);
+        }
+        return;
+      }
       toast.error(err.response?.data?.message || 'Failed to generate token');
     }
   }
@@ -199,7 +212,7 @@ export default function ReceptionistDashboardPage() {
               <Button variant="secondary" icon={CalendarPlus} onClick={() => setShowBookingModal(true)}>
                 Book Appointment
               </Button>
-              <Button icon={TicketPlus} onClick={handleGenerateToken}>
+              <Button icon={TicketPlus} onClick={() => handleGenerateToken()}>
                 Generate Token
               </Button>
             </div>

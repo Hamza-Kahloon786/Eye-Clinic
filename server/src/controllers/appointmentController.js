@@ -50,7 +50,9 @@ const checkIn = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: `Appointment is already ${appointment.status}` });
   }
 
-  const token = await issueToken({ patientId: appointment.patient, fee, createdBy: req.user.id });
+  // force: true -- checking in for a pre-scheduled appointment is always a deliberate
+  // visit, even if the patient also has an unrelated walk-in token earlier today.
+  const token = await issueToken({ patientId: appointment.patient, fee, createdBy: req.user.id, force: true });
   if (!token) {
     return res.status(404).json({ message: 'Patient not found' });
   }

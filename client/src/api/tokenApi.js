@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
-export async function createToken(patientId, fee) {
-  const { data } = await axiosClient.post('/tokens', { patientId, fee });
+export async function createToken(patientId, fee, force = false) {
+  const { data } = await axiosClient.post('/tokens', { patientId, fee, force });
   return data;
 }
 

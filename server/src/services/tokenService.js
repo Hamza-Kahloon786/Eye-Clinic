@@ -7,13 +7,24 @@ const DEFAULT_FEE = 1000;
 
 // Shared by walk-in token generation (POST /api/tokens) and appointment
 // check-in -- both need the same collision-safe daily/serial numbering.
-async function issueToken({ patientId, fee, createdBy }) {
+async function issueToken({ patientId, fee, createdBy, force }) {
   const patient = await Patient.findById(patientId);
   if (!patient) {
     return null;
   }
 
   const date = getTodayDateString();
+
+  if (!force) {
+    const existingToday = await Token.find({ patient: patient._id, date }).sort({ tokenNumber: 1 });
+    if (existingToday.length > 0) {
+      const err = new Error('Patient already has a token today');
+      err.code = 'DUPLICATE_TOKEN_TODAY';
+      err.existingTokens = existingToday;
+      throw err;
+    }
+  }
+
   const [tokenNumber, serialNumber] = await Promise.all([
     getNextSequence(date),
     getNextSequence('tokenSerial'),
