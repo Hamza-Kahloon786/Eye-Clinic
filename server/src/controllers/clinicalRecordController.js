@@ -3,17 +3,10 @@ const Patient = require('../models/Patient');
 const Token = require('../models/Token');
 const GlassesSuggestion = require('../models/GlassesSuggestion');
 const asyncHandler = require('../utils/asyncHandler');
-const getTodayDateString = require('../utils/getTodayDateString');
+const { getTodayDateString, getNowTimeString } = require('../utils/getTodayDateString');
 
 function hasAnyEyeValue(eye) {
   return !!(eye?.sph || eye?.cyl || eye?.axis || eye?.va);
-}
-
-function getNowTimeString() {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}`;
 }
 
 const createRecord = asyncHandler(async (req, res) => {

@@ -8,12 +8,11 @@ const getTodayDateString = require('../utils/getTodayDateString');
 const TREND_DAYS = 14;
 
 function dateStringDaysAgo(days) {
+  // Subtracting whole days from "now" and re-deriving the Pakistan-local date string
+  // works fine across the UTC+5 offset -- a day is always 24h regardless of timezone.
   const d = new Date();
   d.setDate(d.getDate() - days);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return getTodayDateString(d);
 }
 
 const getDashboardStats = asyncHandler(async (req, res) => {

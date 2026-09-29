@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   BarChart,
@@ -26,6 +26,7 @@ import {
 import Layout from '../components/layout/Layout';
 import Loader from '../components/common/Loader';
 import { getDashboardStats } from '../api/statsApi';
+import { getTodayDateString } from '../utils/dateUtils';
 
 const QUEUE_COLORS = { waiting: '#f59e0b', 'in-progress': '#0ea5e9', done: '#10b981' };
 const APPOINTMENT_COLORS = { scheduled: '#0ea5e9', 'checked-in': '#10b981', cancelled: '#ef4444' };
@@ -105,9 +106,9 @@ function lastNDates(n) {
   for (let i = 0; i < n; i += 1) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    dates.push(
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    );
+    // Subtracting whole days and re-deriving the Pakistan-local date string works
+    // fine across the UTC+5 offset -- a day is always 24h regardless of timezone.
+    dates.push(getTodayDateString(d));
   }
   return new Set(dates);
 }
@@ -116,12 +117,16 @@ export default function DoctorOverviewPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [queueRangeDays, setQueueRangeDays] = useState(1);
+  // Guards against React StrictMode's intentional double-invoke of effects in dev
+  // mode, which would otherwise fire this toast twice on every localhost load.
+  const lowStockToastShown = useRef(false);
 
   useEffect(() => {
     getDashboardStats()
       .then((data) => {
         setStats(data);
-        if (data.lowStockMedicines?.length > 0) {
+        if (data.lowStockMedicines?.length > 0 && !lowStockToastShown.current) {
+          lowStockToastShown.current = true;
           toast.error(
             `${data.lowStockMedicines.length} medicine${data.lowStockMedicines.length === 1 ? '' : 's'} low on stock`
           );

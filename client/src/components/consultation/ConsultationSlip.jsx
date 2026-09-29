@@ -146,8 +146,11 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
           <Field label="S/O D/O W/O" value={patient.guardianName} />
           <Field label="No of Visit" value={visitNumber} />
           <div className="grid grid-cols-2 gap-x-6">
-            <Field label="Time" value={now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-            <Field label="Date" value={now.toLocaleDateString()} />
+            <Field
+              label="Time"
+              value={now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Karachi' })}
+            />
+            <Field label="Date" value={now.toLocaleDateString([], { timeZone: 'Asia/Karachi' })} />
           </div>
           <Field label="Address" value={patient.address} />
           <Field label="Contact No" value={patient.phone} />
