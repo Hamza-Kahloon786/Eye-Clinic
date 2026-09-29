@@ -7,6 +7,7 @@ import { createRecord } from '../../api/recordApi';
 
 const EMPTY_MEDICAL_HISTORY = { dm: false, htn: false, ihd: false, ckd: false };
 const EMPTY_EYE = { sph: '', cyl: '', axis: '', va: '' };
+const LENS_TYPES = ['Single Vision', 'Bifocal', 'Progressive', 'Reading', 'Anti-Glare'];
 
 const MEDICAL_HISTORY_OPTIONS = [
   { key: 'dm', label: 'DM (Diabetes Mellitus)' },
@@ -24,6 +25,7 @@ const EMPTY_FORM = {
   treatment: '',
   rightEye: EMPTY_EYE,
   leftEye: EMPTY_EYE,
+  lensType: '',
 };
 
 function formFromRecord(record, suggestion) {
@@ -37,6 +39,7 @@ function formFromRecord(record, suggestion) {
     treatment: record.treatment || '',
     rightEye: { ...EMPTY_EYE, ...(suggestion?.rightEye || {}) },
     leftEye: { ...EMPTY_EYE, ...(suggestion?.leftEye || {}) },
+    lensType: suggestion?.lensType || '',
   };
 }
 
@@ -96,10 +99,12 @@ export default function ClinicalRecordForm({
         treatment: form.treatment,
         rightEye: form.rightEye,
         leftEye: form.leftEye,
+        lensType: form.lensType,
       });
       toast.success('Clinical record saved');
-      setForm(formFromRecord(record, { rightEye: form.rightEye, leftEye: form.leftEye }));
-      onSaved?.(record, { rightEye: form.rightEye, leftEye: form.leftEye });
+      const eyeValues = { rightEye: form.rightEye, leftEye: form.leftEye, lensType: form.lensType };
+      setForm(formFromRecord(record, eyeValues));
+      onSaved?.(record, eyeValues);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save record');
     } finally {
@@ -146,6 +151,21 @@ export default function ClinicalRecordForm({
         </div>
       </div>
       <Input label="Finding" value={form.finding} onChange={(e) => update('finding', e.target.value)} />
+      <label className="flex flex-col gap-1.5 text-sm text-gray-700">
+        <span className="font-medium text-gray-700">Optical (Lens Type)</span>
+        <select
+          value={form.lensType}
+          onChange={(e) => update('lensType', e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm transition-all duration-150 hover:border-gray-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+        >
+          <option value="">Not needed</option>
+          {LENS_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="flex flex-col gap-1.5 text-sm text-gray-700">
         <span className="font-medium text-gray-700">Treatment / Prescription</span>
         <textarea

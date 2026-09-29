@@ -23,6 +23,7 @@ const createRecord = asyncHandler(async (req, res) => {
     diagnosis,
     rightEye,
     leftEye,
+    lensType,
   } = req.body;
 
   if (!patientId) {
@@ -78,13 +79,14 @@ const createRecord = asyncHandler(async (req, res) => {
     });
   }
 
-  // If the doctor entered any eye-refraction values on the slip, upsert them into
-  // the same GlassesSuggestion the Optical module reads -- one entry point, no
-  // duplicate data between the consultation slip and the Optical portal.
-  if (tokenId && (hasAnyEyeValue(rightEye) || hasAnyEyeValue(leftEye))) {
+  // If the doctor entered any eye-refraction values or a lens type on the slip,
+  // upsert them into the same GlassesSuggestion the Optical module reads -- one
+  // entry point, no duplicate data between the consultation slip and the Optical portal.
+  if (tokenId && (hasAnyEyeValue(rightEye) || hasAnyEyeValue(leftEye) || lensType)) {
     const eyeFields = {
       rightEye: { sph: rightEye?.sph, cyl: rightEye?.cyl, axis: rightEye?.axis, va: rightEye?.va },
       leftEye: { sph: leftEye?.sph, cyl: leftEye?.cyl, axis: leftEye?.axis, va: leftEye?.va },
+      lensType,
     };
 
     const existingSuggestion = await GlassesSuggestion.findOne({ token: tokenId });

@@ -88,7 +88,12 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
   function handleRecordSaved(savedRecord, eyeValues) {
     setRecord(savedRecord);
     if (eyeValues) {
-      setSuggestion((prev) => ({ ...(prev || {}), rightEye: eyeValues.rightEye, leftEye: eyeValues.leftEye }));
+      setSuggestion((prev) => ({
+        ...(prev || {}),
+        rightEye: eyeValues.rightEye,
+        leftEye: eyeValues.leftEye,
+        lensType: eyeValues.lensType,
+      }));
     }
   }
 
@@ -178,6 +183,7 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
               <BlankLine label="Presenting Complaints" />
               <MedicalHistoryRow medicalHistory={record?.medicalHistory} />
               <WrappingField label="Findings" value={record?.finding} />
+              <Field label="Optical" value={suggestion?.lensType} />
               <BlankLine label="Investigations" />
             </div>
           </div>
