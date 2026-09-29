@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   createSuggestion,
+  getSuggestionByToken,
   getAllSuggestions,
   updateSuggestion,
   deleteSuggestion,
@@ -16,6 +17,7 @@ router.use(verifyJWT);
 
 router.post('/', requireRole('doctor'), createSuggestion);
 router.get('/', requireRole('doctor', 'optical'), getAllSuggestions);
+router.get('/by-token/:tokenId', requireRole('doctor', 'optical'), getSuggestionByToken);
 router.get('/stats', requireRole('optical'), getOpticalStats);
 router.patch('/:id', requireRole('doctor'), updateSuggestion);
 router.delete('/:id', requireRole('doctor'), deleteSuggestion);

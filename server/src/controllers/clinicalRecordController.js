@@ -1,8 +1,13 @@
 const ClinicalRecord = require('../models/ClinicalRecord');
 const Patient = require('../models/Patient');
 const Token = require('../models/Token');
+const GlassesSuggestion = require('../models/GlassesSuggestion');
 const asyncHandler = require('../utils/asyncHandler');
 const getTodayDateString = require('../utils/getTodayDateString');
+
+function hasAnyEyeValue(eye) {
+  return !!(eye?.sph || eye?.cyl || eye?.axis || eye?.va);
+}
 
 function getNowTimeString() {
   const now = new Date();
@@ -17,11 +22,14 @@ const createRecord = asyncHandler(async (req, res) => {
     tokenId,
     weight,
     allergy,
+    visualAcuity,
     medicalHistory,
     symptomHistoryCondition,
     finding,
     treatment,
     diagnosis,
+    rightEye,
+    leftEye,
   } = req.body;
 
   if (!patientId) {
@@ -45,6 +53,7 @@ const createRecord = asyncHandler(async (req, res) => {
   const fields = {
     weight: weight || undefined,
     allergy,
+    visualAcuity,
     medicalHistory: {
       dm: !!medicalHistory?.dm,
       htn: !!medicalHistory?.htn,
@@ -74,6 +83,32 @@ const createRecord = asyncHandler(async (req, res) => {
       ...fields,
       createdBy: req.user.id,
     });
+  }
+
+  // If the doctor entered any eye-refraction values on the slip, upsert them into
+  // the same GlassesSuggestion the Optical module reads -- one entry point, no
+  // duplicate data between the consultation slip and the Optical portal.
+  if (tokenId && (hasAnyEyeValue(rightEye) || hasAnyEyeValue(leftEye))) {
+    const eyeFields = {
+      rightEye: { sph: rightEye?.sph, cyl: rightEye?.cyl, axis: rightEye?.axis, va: rightEye?.va },
+      leftEye: { sph: leftEye?.sph, cyl: leftEye?.cyl, axis: leftEye?.axis, va: leftEye?.va },
+    };
+
+    const existingSuggestion = await GlassesSuggestion.findOne({ token: tokenId });
+    if (existingSuggestion) {
+      if (existingSuggestion.status === 'suggested') {
+        await GlassesSuggestion.findByIdAndUpdate(existingSuggestion._id, { $set: eyeFields });
+      }
+      // Once optical has started/finished the order, the slip no longer edits it --
+      // same rule GlassesSuggestion's own updateSuggestion enforces.
+    } else {
+      await GlassesSuggestion.create({
+        patient: patient._id,
+        token: tokenId,
+        suggestedBy: req.user.id,
+        ...eyeFields,
+      });
+    }
   }
 
   const populated = await record.populate('patient');

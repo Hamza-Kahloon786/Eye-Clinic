@@ -15,6 +15,16 @@ export async function getPatientSuggestions(patientId) {
   return data;
 }
 
+export async function getSuggestionByToken(tokenId) {
+  try {
+    const { data } = await axiosClient.get(`/glasses/by-token/${tokenId}`);
+    return data;
+  } catch (err) {
+    if (err.response?.status === 404) return null;
+    throw err;
+  }
+}
+
 export async function updateSuggestionStatus(id, payload) {
   const { data } = await axiosClient.patch(`/glasses/${id}/status`, payload);
   return data;

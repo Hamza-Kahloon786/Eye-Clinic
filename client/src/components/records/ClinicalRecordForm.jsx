@@ -6,6 +6,7 @@ import Button from '../common/Button';
 import { createRecord } from '../../api/recordApi';
 
 const EMPTY_MEDICAL_HISTORY = { dm: false, htn: false, ihd: false, ckd: false };
+const EMPTY_EYE = { sph: '', cyl: '', axis: '', va: '' };
 
 const MEDICAL_HISTORY_OPTIONS = [
   { key: 'dm', label: 'DM (Diabetes Mellitus)' },
@@ -17,19 +18,25 @@ const MEDICAL_HISTORY_OPTIONS = [
 const EMPTY_FORM = {
   weight: '',
   allergy: '',
+  visualAcuity: '',
   medicalHistory: EMPTY_MEDICAL_HISTORY,
   finding: '',
   treatment: '',
+  rightEye: EMPTY_EYE,
+  leftEye: EMPTY_EYE,
 };
 
-function formFromRecord(record) {
+function formFromRecord(record, suggestion) {
   if (!record) return EMPTY_FORM;
   return {
     weight: record.weight ?? '',
     allergy: record.allergy || '',
+    visualAcuity: record.visualAcuity || '',
     medicalHistory: { ...EMPTY_MEDICAL_HISTORY, ...(record.medicalHistory || {}) },
     finding: record.finding || '',
     treatment: record.treatment || '',
+    rightEye: { ...EMPTY_EYE, ...(suggestion?.rightEye || {}) },
+    leftEye: { ...EMPTY_EYE, ...(suggestion?.leftEye || {}) },
   };
 }
 
@@ -38,16 +45,17 @@ export default function ClinicalRecordForm({
   tokenId,
   diagnosis,
   initialRecord,
+  initialSuggestion,
   prefillTreatment,
   prefillToken,
   onSaved,
 }) {
-  const [form, setForm] = useState(() => formFromRecord(initialRecord));
+  const [form, setForm] = useState(() => formFromRecord(initialRecord, initialSuggestion));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setForm(formFromRecord(initialRecord));
-  }, [initialRecord]);
+    setForm(formFromRecord(initialRecord, initialSuggestion));
+  }, [initialRecord, initialSuggestion]);
 
   useEffect(() => {
     if (prefillTreatment == null) return;
@@ -59,6 +67,10 @@ export default function ClinicalRecordForm({
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function updateEye(eyeKey, field, value) {
+    setForm((prev) => ({ ...prev, [eyeKey]: { ...prev[eyeKey], [field]: value } }));
   }
 
   function toggleMedicalHistory(key) {
@@ -78,13 +90,16 @@ export default function ClinicalRecordForm({
         diagnosis,
         weight: form.weight ? Number(form.weight) : undefined,
         allergy: form.allergy,
+        visualAcuity: form.visualAcuity,
         medicalHistory: form.medicalHistory,
         finding: form.finding,
         treatment: form.treatment,
+        rightEye: form.rightEye,
+        leftEye: form.leftEye,
       });
       toast.success('Clinical record saved');
-      setForm(formFromRecord(record));
-      onSaved?.(record);
+      setForm(formFromRecord(record, { rightEye: form.rightEye, leftEye: form.leftEye }));
+      onSaved?.(record, { rightEye: form.rightEye, leftEye: form.leftEye });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save record');
     } finally {
@@ -108,6 +123,12 @@ export default function ClinicalRecordForm({
         />
         <Input label="Allergy" value={form.allergy} onChange={(e) => update('allergy', e.target.value)} />
       </div>
+      <Input
+        label="V.A (Visual Acuity)"
+        value={form.visualAcuity}
+        onChange={(e) => update('visualAcuity', e.target.value)}
+        placeholder="e.g. 6/6, 6/9"
+      />
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-gray-700">Medical History</span>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -135,6 +156,61 @@ export default function ClinicalRecordForm({
           className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm transition-all duration-150 placeholder:text-gray-400 hover:border-gray-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
         />
       </label>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-gray-700">Glasses Number (Eye Refraction)</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Right Eye</h4>
+            <div className="grid grid-cols-4 gap-2">
+              <Input
+                label="SPH"
+                value={form.rightEye.sph}
+                onChange={(e) => updateEye('rightEye', 'sph', e.target.value)}
+              />
+              <Input
+                label="CYL"
+                value={form.rightEye.cyl}
+                onChange={(e) => updateEye('rightEye', 'cyl', e.target.value)}
+              />
+              <Input
+                label="AXIS"
+                value={form.rightEye.axis}
+                onChange={(e) => updateEye('rightEye', 'axis', e.target.value)}
+              />
+              <Input
+                label="VA"
+                value={form.rightEye.va}
+                onChange={(e) => updateEye('rightEye', 'va', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Left Eye</h4>
+            <div className="grid grid-cols-4 gap-2">
+              <Input
+                label="SPH"
+                value={form.leftEye.sph}
+                onChange={(e) => updateEye('leftEye', 'sph', e.target.value)}
+              />
+              <Input
+                label="CYL"
+                value={form.leftEye.cyl}
+                onChange={(e) => updateEye('leftEye', 'cyl', e.target.value)}
+              />
+              <Input
+                label="AXIS"
+                value={form.leftEye.axis}
+                onChange={(e) => updateEye('leftEye', 'axis', e.target.value)}
+              />
+              <Input
+                label="VA"
+                value={form.leftEye.va}
+                onChange={(e) => updateEye('leftEye', 'va', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="flex justify-end">
         <Button type="submit" icon={Save} disabled={saving}>
           {saving ? 'Saving...' : initialRecord ? 'Update Record' : 'Save Record'}

@@ -17,6 +17,7 @@ const clinicalRecordSchema = new mongoose.Schema(
     time: { type: String, required: true }, // 'HH:mm', server-local time
     weight: { type: Number, min: 0 },
     allergy: { type: String, trim: true },
+    visualAcuity: { type: String, trim: true },
     medicalHistory: {
       dm: { type: Boolean, default: false }, // Diabetes Mellitus
       htn: { type: Boolean, default: false }, // Hypertension

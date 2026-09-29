@@ -5,6 +5,7 @@ const eyeRefractionSchema = new mongoose.Schema(
     sph: { type: String, trim: true },
     cyl: { type: String, trim: true },
     axis: { type: String, trim: true },
+    va: { type: String, trim: true }, // Visual Acuity, e.g. "6/6"
   },
   { _id: false }
 );

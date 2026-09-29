@@ -6,6 +6,7 @@ import EyeLogo from './EyeLogo';
 import DiagnosisPicker from './DiagnosisPicker';
 import ClinicalRecordForm from '../records/ClinicalRecordForm';
 import { getRecordByToken } from '../../api/recordApi';
+import { getSuggestionByToken } from '../../api/glassesApi';
 import { CLINIC_INFO, DEFAULT_VITALS } from '../../constants/clinicInfo';
 
 const EYE_COLUMNS = ['SPH', 'CYL', 'AXIS', 'VA'];
@@ -67,6 +68,7 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
   const now = new Date();
   const [diagnosis, setDiagnosis] = useState(token.diagnosis || '');
   const [record, setRecord] = useState(null);
+  const [suggestion, setSuggestion] = useState(null);
   const [prefillTreatment, setPrefillTreatment] = useState(null);
   const [prefillToken, setPrefillToken] = useState(0);
 
@@ -75,10 +77,20 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
     getRecordByToken(token._id).then((data) => {
       if (!cancelled) setRecord(data);
     });
+    getSuggestionByToken(token._id).then((data) => {
+      if (!cancelled) setSuggestion(data);
+    });
     return () => {
       cancelled = true;
     };
   }, [token._id]);
+
+  function handleRecordSaved(savedRecord, eyeValues) {
+    setRecord(savedRecord);
+    if (eyeValues) {
+      setSuggestion((prev) => ({ ...(prev || {}), rightEye: eyeValues.rightEye, leftEye: eyeValues.leftEye }));
+    }
+  }
 
   function handleDiagnosisChange(newDiagnosis) {
     setDiagnosis(newDiagnosis);
@@ -157,7 +169,7 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
               </span>
               <span>Verbal Consent Taken</span>
             </div>
-            <BlankLine label="V.A (Visual Acuity):" />
+            <Field label="V.A (Visual Acuity)" value={record?.visualAcuity} />
             <WrappingField label="Allergies" value={record?.allergy || DEFAULT_VITALS.allergy} />
             <div className="flex flex-col gap-6 pt-2">
               <BlankLine label="Presenting Complaints" />
@@ -202,7 +214,9 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
                 {EYE_ROWS.map((row) => (
                   <tr key={`r-row-${row}`}>
                     {EYE_COLUMNS.map((col) => (
-                      <td key={`r-${row}-${col}`} className="h-6 border border-gray-400"></td>
+                      <td key={`r-${row}-${col}`} className="h-6 border border-gray-400">
+                        {row === 'DV' ? suggestion?.rightEye?.[col.toLowerCase()] || '' : ''}
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -246,7 +260,9 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
                 {EYE_ROWS.map((row) => (
                   <tr key={`l-row-${row}`}>
                     {EYE_COLUMNS.map((col) => (
-                      <td key={`l-${row}-${col}`} className="h-6 border border-gray-400"></td>
+                      <td key={`l-${row}-${col}`} className="h-6 border border-gray-400">
+                        {row === 'DV' ? suggestion?.leftEye?.[col.toLowerCase()] || '' : ''}
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -281,9 +297,10 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
         tokenId={token._id}
         diagnosis={diagnosis}
         initialRecord={record}
+        initialSuggestion={suggestion}
         prefillTreatment={prefillTreatment}
         prefillToken={prefillToken}
-        onSaved={setRecord}
+        onSaved={handleRecordSaved}
       />
 
       <div className="flex justify-end gap-2">

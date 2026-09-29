@@ -38,6 +38,16 @@ const createSuggestion = asyncHandler(async (req, res) => {
   res.status(201).json(populated);
 });
 
+const getSuggestionByToken = asyncHandler(async (req, res) => {
+  const suggestion = await GlassesSuggestion.findOne({ token: req.params.tokenId })
+    .populate('patient')
+    .populate('suggestedBy', 'fullName');
+  if (!suggestion) {
+    return res.status(404).json({ message: 'Glasses suggestion not found' });
+  }
+  res.json(suggestion);
+});
+
 const getPatientSuggestions = asyncHandler(async (req, res) => {
   const patient = await Patient.findById(req.params.id);
   if (!patient) {
@@ -187,6 +197,7 @@ const getOpticalStats = asyncHandler(async (req, res) => {
 
 module.exports = {
   createSuggestion,
+  getSuggestionByToken,
   getPatientSuggestions,
   getAllSuggestions,
   updateSuggestion,
