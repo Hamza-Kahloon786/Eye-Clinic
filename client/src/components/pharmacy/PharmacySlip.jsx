@@ -31,67 +31,107 @@ export default function PharmacySlip({ sale, onClose }) {
 
   const { date, time } = formatSlipDateTime(new Date(sale.createdAt || Date.now()));
   const patient = sale.patient;
+  // Single-item sale today, but the table/summary is built to extend cleanly to
+  // multiple line items (e.g. a future multi-medicine checkout) without a rewrite.
+  const items = [
+    {
+      name: sale.medicineName,
+      rate: sale.unitPrice,
+      qty: sale.quantity,
+      discPercent: 0,
+      total: sale.totalAmount,
+    },
+  ];
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const discTotal = 0;
+  const previousBalance = 0;
+  const netTotal = subtotal - discTotal + previousBalance;
 
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="print-area w-full max-w-sm rounded-md border border-gray-300 p-5 text-gray-900">
         <div className="flex flex-col items-center text-center">
           <EyeLogo className="h-9 w-12" />
-          <h3 className="mt-1 text-lg font-bold">{CLINIC_INFO.clinicNameEnglish}</h3>
-          <p className="text-xs text-gray-600">{CLINIC_INFO.address}</p>
+          <h3 className="mt-1 text-lg font-bold underline decoration-2 underline-offset-2">
+            {CLINIC_INFO.clinicNameEnglish}
+          </h3>
+          <p className="mt-1 text-xs leading-relaxed text-gray-700">{CLINIC_INFO.address}</p>
+          {CLINIC_INFO.muridkeAddress && (
+            <p className="text-xs leading-relaxed text-gray-700">{CLINIC_INFO.muridkeAddress}</p>
+          )}
+          {CLINIC_INFO.phone && <p className="text-xs text-gray-700">Phone: {CLINIC_INFO.phone}</p>}
+          {CLINIC_INFO.licenseNo && (
+            <p className="mt-1 text-xs text-gray-700">
+              <span className="font-semibold">License No</span>: {CLINIC_INFO.licenseNo}
+            </p>
+          )}
         </div>
 
         <hr className="my-2.5 border-t-2 border-gray-800" />
 
-        <div className="flex items-center justify-between text-xs text-gray-700">
+        <div className="flex items-start justify-between text-xs text-gray-700">
           <span>
-            <span className="font-semibold">Invoice#:</span> {sale.invoiceNumber || '-'}
+            <span className="font-semibold underline">Inv#</span>:{sale.invoiceNumber || '-'}
           </span>
           <span>
             <span className="font-semibold">Date:</span> {date}
           </span>
         </div>
-        <div className="mt-0.5 flex items-center justify-between text-xs text-gray-700">
-          <span>
-            <span className="font-semibold">Patient:</span> {patient?.fullName || '-'}
+        <div className="mt-0.5 flex items-start justify-between gap-3 text-xs text-gray-700">
+          <span className="min-w-0">
+            <span className="font-semibold underline">M/S</span>: {patient?.fullName || '-'}
+            {patient?.mrNumber && <span className="text-gray-500"> ({patient.mrNumber})</span>}
           </span>
-          <span>
+          <span className="shrink-0">
             <span className="font-semibold">Time:</span> {time}
           </span>
         </div>
-        {patient?.mrNumber && (
-          <p className="mt-0.5 text-xs text-gray-700">
-            <span className="font-semibold">MR#:</span> {patient.mrNumber}
-          </p>
-        )}
 
         <table className="mt-3 w-full border-collapse text-xs">
           <thead>
             <tr className="border-b border-t border-gray-400">
               <th className="py-1.5 text-left font-semibold">Item Name</th>
               <th className="py-1.5 text-right font-semibold">Rate</th>
-              <th className="py-1.5 text-right font-semibold">Qty</th>
+              <th className="py-1.5 text-right font-semibold">QTY</th>
+              <th className="py-1.5 text-right font-semibold">Disc%</th>
               <th className="py-1.5 text-right font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-200">
-              <td className="py-1.5 pr-1">{sale.medicineName}</td>
-              <td className="py-1.5 text-right">{formatMoney(sale.unitPrice)}</td>
-              <td className="py-1.5 text-right">{sale.quantity}</td>
-              <td className="py-1.5 text-right">{formatMoney(sale.totalAmount)}</td>
-            </tr>
+            {items.map((item, i) => (
+              <tr key={i} className="border-b border-gray-200">
+                <td className="py-1.5 pr-1">{item.name}</td>
+                <td className="py-1.5 text-right">{formatMoney(item.rate)}</td>
+                <td className="py-1.5 text-right">{item.qty}</td>
+                <td className="py-1.5 text-right">{formatMoney(item.discPercent)}</td>
+                <td className="py-1.5 text-right">{formatMoney(item.total)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
-        <div className="mt-2 border-t-2 border-gray-800 pt-2 text-xs text-gray-700">
-          <div className="flex items-center justify-between">
-            <span>Total Item: 1</span>
-            <span className="font-semibold">Total: Rs {formatMoney(sale.totalAmount)}</span>
+        <div className="mt-2 flex items-start justify-between gap-4 border-t-2 border-gray-800 pt-2 text-xs text-gray-700">
+          <div>
+            <p>
+              <span className="font-semibold">Total Item:</span> {items.length}
+            </p>
+            <p className="mt-3 max-w-[9rem] italic text-gray-500">No return is accepted without bill</p>
           </div>
-          <div className="mt-2 flex items-center justify-between border-t border-dashed border-gray-400 pt-2">
-            <span className="text-[11px] italic text-gray-500">No return accepted without bill</span>
-            <span className="text-sm font-bold">Net Total: Rs {formatMoney(sale.totalAmount)}</span>
+          <div className="min-w-[8.5rem] text-right">
+            <p>
+              <span className="font-semibold">Total:</span> {formatMoney(subtotal)}
+            </p>
+            <p>
+              <span className="font-semibold">Disc:</span> {formatMoney(discTotal)}
+            </p>
+            <p>
+              <span className="font-semibold">Previous:</span> {formatMoney(previousBalance)}
+            </p>
+            <div className="mt-1.5 border-t border-gray-400 pt-1.5">
+              <p className="font-bold">
+                <span className="underline">Net Total</span>: {formatMoney(netTotal)}
+              </p>
+            </div>
           </div>
         </div>
       </div>

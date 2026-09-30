@@ -6,6 +6,7 @@ export const CLINIC_INFO = {
   clinicNameEnglish: 'Usman Laser Eye Clinic',
   clinicNameUrdu: 'عثمان لیزر آئی کلینک',
   address: 'Haidry chok, Near RHC Narang Mandi',
+  muridkeAddress: 'Zafar Plaza, Muridke',
   motto: 'هوالشافی',
   doctor: {
     nameEnglish: 'Dr. Usman Rasheed Bhatti',
