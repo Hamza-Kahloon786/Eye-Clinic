@@ -92,6 +92,9 @@ export default function PharmacySalesHistoryPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Invoice #
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Date
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -117,8 +120,11 @@ export default function PharmacySalesHistoryPage() {
               <tbody className="divide-y divide-gray-100 bg-white">
                 {sales.map((s) => (
                   <tr key={s._id} className="transition-colors duration-150 hover:bg-sky-50/40">
+                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-700">
+                      {s.invoiceNumber || '-'}
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-600">
-                      {new Date(s.createdAt).toLocaleString()}
+                      {new Date(s.createdAt).toLocaleString([], { timeZone: 'Asia/Karachi' })}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-900">{s.medicineName}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-900">

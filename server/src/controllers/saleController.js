@@ -3,6 +3,7 @@ const Medicine = require('../models/Medicine');
 const Patient = require('../models/Patient');
 const asyncHandler = require('../utils/asyncHandler');
 const getTodayDateString = require('../utils/getTodayDateString');
+const { getNextSequence } = require('../utils/generateMrNumber');
 
 const createSale = asyncHandler(async (req, res) => {
   const { medicineId, patientId, quantity } = req.body;
@@ -39,7 +40,13 @@ const createSale = asyncHandler(async (req, res) => {
     { new: true, runValidators: true }
   );
 
+  // Shared Counter-based sequence (same mechanism as MR numbers), all-time running
+  // count -- never resets -- so printed receipts never collide or repeat.
+  const seq = await getNextSequence('saleInvoice');
+  const invoiceNumber = `INV-${String(seq).padStart(5, '0')}`;
+
   const sale = await Sale.create({
+    invoiceNumber,
     medicine: medicine._id,
     medicineName: medicine.name,
     patient: patient._id,

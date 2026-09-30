@@ -9,6 +9,7 @@ import Modal from '../components/common/Modal';
 import DataTable, { EmptyState } from '../components/common/DataTable';
 import Pagination from '../components/common/Pagination';
 import SellMedicineModal from '../components/pharmacy/SellMedicineModal';
+import PharmacySlip from '../components/pharmacy/PharmacySlip';
 import { useAuth } from '../auth/AuthContext';
 import { getMedicines, createMedicine, updateMedicine, deleteMedicine } from '../api/medicineApi';
 
@@ -59,6 +60,7 @@ export default function PharmacyPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [sellingMedicine, setSellingMedicine] = useState(null);
+  const [printedSale, setPrintedSale] = useState(null);
 
   async function loadMedicines() {
     setLoading(true);
@@ -166,6 +168,7 @@ export default function PharmacyPage() {
   function handleSold(sale, updatedMedicine) {
     setMedicines((prev) => prev.map((m) => (m._id === updatedMedicine._id ? updatedMedicine : m)));
     setSellingMedicine(null);
+    setPrintedSale(sale);
   }
 
   return (
@@ -375,6 +378,10 @@ export default function PharmacyPage() {
       </Modal>
 
       <SellMedicineModal medicine={sellingMedicine} onClose={() => setSellingMedicine(null)} onSold={handleSold} />
+
+      <Modal open={!!printedSale} onClose={() => setPrintedSale(null)} title="Sale Receipt">
+        {printedSale && <PharmacySlip sale={printedSale} onClose={() => setPrintedSale(null)} />}
+      </Modal>
     </Layout>
   );
 }

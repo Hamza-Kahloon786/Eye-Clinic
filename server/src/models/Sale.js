@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const saleSchema = new mongoose.Schema(
   {
+    invoiceNumber: { type: String, unique: true, immutable: true },
     medicine: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Medicine',
