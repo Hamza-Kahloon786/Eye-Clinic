@@ -1,6 +1,16 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { CalendarPlus, TicketPlus, UserPlus, Hourglass, ListOrdered, CheckCircle2, CalendarClock } from 'lucide-react';
+import {
+  CalendarPlus,
+  TicketPlus,
+  UserPlus,
+  Hourglass,
+  ListOrdered,
+  CheckCircle2,
+  CalendarClock,
+  Wallet,
+  TrendingDown,
+} from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import PatientSearchForm from '../components/patient/PatientSearchForm';
 import PatientSearchResults from '../components/patient/PatientSearchResults';
@@ -14,6 +24,7 @@ import Input from '../components/common/Input';
 import { searchPatients, createPatient } from '../api/patientApi';
 import { createToken, getTodayQueue } from '../api/tokenApi';
 import { createAppointment, getAppointments } from '../api/appointmentApi';
+import { getDashboardStats } from '../api/statsApi';
 import { DEFAULT_CONSULTATION_FEE } from '../constants/clinicInfo';
 import { getTodayDateString } from '../utils/dateUtils';
 
@@ -51,17 +62,20 @@ export default function ReceptionistDashboardPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [booking, setBooking] = useState(false);
   const [appointmentsToday, setAppointmentsToday] = useState([]);
+  const [pharmacyStats, setPharmacyStats] = useState({ pharmacyRevenueToday: 0, pharmacyRevenueTotal: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
 
   const loadStats = useCallback(async () => {
     setStatsLoading(true);
     try {
-      const [queueData, appointmentsData] = await Promise.all([
+      const [queueData, appointmentsData, dashboardData] = await Promise.all([
         getTodayQueue(),
         getAppointments(getTodayDateString()),
+        getDashboardStats(),
       ]);
       setQueue(queueData);
       setAppointmentsToday(appointmentsData);
+      setPharmacyStats(dashboardData);
     } catch (err) {
       toast.error('Failed to load dashboard stats');
     } finally {
@@ -172,12 +186,28 @@ export default function ReceptionistDashboardPage() {
       {statsLoading ? (
         <Loader />
       ) : (
-        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatTile icon={Hourglass} label="Waiting" value={stats.waiting} color="amber" />
-          <StatTile icon={ListOrdered} label="In Progress" value={stats.inProgress} color="sky" />
-          <StatTile icon={CheckCircle2} label="Completed Today" value={stats.done} color="emerald" />
-          <StatTile icon={CalendarClock} label="Appointments Today" value={stats.appointmentsToday} color="purple" />
-        </div>
+        <>
+          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatTile icon={Hourglass} label="Waiting" value={stats.waiting} color="amber" />
+            <StatTile icon={ListOrdered} label="In Progress" value={stats.inProgress} color="sky" />
+            <StatTile icon={CheckCircle2} label="Completed Today" value={stats.done} color="emerald" />
+            <StatTile icon={CalendarClock} label="Appointments Today" value={stats.appointmentsToday} color="purple" />
+          </div>
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <StatTile
+              icon={Wallet}
+              label="Pharmacy Revenue Today"
+              value={`Rs ${Number(pharmacyStats.pharmacyRevenueToday || 0).toLocaleString()}`}
+              color="emerald"
+            />
+            <StatTile
+              icon={TrendingDown}
+              label="Total Pharmacy Revenue"
+              value={`Rs ${Number(pharmacyStats.pharmacyRevenueTotal || 0).toLocaleString()}`}
+              color="sky"
+            />
+          </div>
+        </>
       )}
 
       <section className="rounded-xl border border-gray-200/70 bg-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md">
