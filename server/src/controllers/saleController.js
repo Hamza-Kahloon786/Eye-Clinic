@@ -6,17 +6,10 @@ const getTodayDateString = require('../utils/getTodayDateString');
 const { getNextSequence } = require('../utils/generateMrNumber');
 
 const createSale = asyncHandler(async (req, res) => {
-  const { medicineId, patientId, quantity } = req.body;
+  const { patientId, items } = req.body;
 
-  if (!medicineId || !patientId || !quantity || Number(quantity) <= 0) {
-    return res.status(400).json({ message: 'medicineId, patientId, and a positive quantity are required' });
-  }
-
-  const qty = Number(quantity);
-
-  const medicine = await Medicine.findById(medicineId);
-  if (!medicine) {
-    return res.status(404).json({ message: 'Medicine not found' });
+  if (!patientId || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: 'patientId and a non-empty items array are required' });
   }
 
   const patient = await Patient.findById(patientId);
@@ -24,21 +17,67 @@ const createSale = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Patient not found' });
   }
 
-  if (qty > (medicine.stockQuantity || 0)) {
-    return res.status(400).json({ message: 'Insufficient stock for this quantity' });
+  // Normalize + validate every line before writing anything -- a multi-item cart
+  // should report every problem at once (e.g. two medicines short on stock),
+  // not fail on the first one and leave the receptionist guessing about the rest.
+  const normalized = [];
+  const errors = [];
+
+  for (const item of items) {
+    const medicineId = item?.medicineId;
+    const quantity = Number(item?.quantity);
+
+    if (!medicineId || !Number.isFinite(quantity) || quantity <= 0) {
+      errors.push('Each item requires a medicineId and a positive quantity');
+      continue;
+    }
+
+    const medicine = await Medicine.findById(medicineId);
+    if (!medicine) {
+      errors.push(`Medicine not found (${medicineId})`);
+      continue;
+    }
+
+    if (quantity > (medicine.stockQuantity || 0)) {
+      errors.push(`Insufficient stock for ${medicine.name} (requested ${quantity}, in stock ${medicine.stockQuantity || 0})`);
+      continue;
+    }
+
+    normalized.push({ medicine, quantity });
   }
 
-  const unitPrice = medicine.retailPrice || 0;
-  const totalAmount = unitPrice * qty;
+  if (errors.length > 0) {
+    return res.status(400).json({ message: errors.join('; ') });
+  }
 
-  // $set via findByIdAndUpdate (not Object.assign + .save()) so the write is
-  // guaranteed to persist -- Mongoose's document-level dirty tracking has proven
-  // unreliable for this pattern elsewhere in this codebase.
-  const updatedMedicine = await Medicine.findByIdAndUpdate(
-    medicineId,
-    { $set: { stockQuantity: medicine.stockQuantity - qty } },
-    { new: true, runValidators: true }
-  );
+  // All lines validated -- now apply the writes.
+  const saleItems = [];
+  const updatedMedicines = [];
+
+  for (const { medicine, quantity } of normalized) {
+    const unitPrice = medicine.retailPrice || 0;
+    const totalAmount = unitPrice * quantity;
+
+    // $set via findByIdAndUpdate (not Object.assign + .save()) so the write is
+    // guaranteed to persist -- Mongoose's document-level dirty tracking has proven
+    // unreliable for this pattern elsewhere in this codebase.
+    const updatedMedicine = await Medicine.findByIdAndUpdate(
+      medicine._id,
+      { $set: { stockQuantity: medicine.stockQuantity - quantity } },
+      { new: true, runValidators: true }
+    );
+    updatedMedicines.push(updatedMedicine);
+
+    saleItems.push({
+      medicine: medicine._id,
+      medicineName: medicine.name,
+      quantity,
+      unitPrice,
+      totalAmount,
+    });
+  }
+
+  const grandTotal = saleItems.reduce((sum, item) => sum + item.totalAmount, 0);
 
   // Shared Counter-based sequence (same mechanism as MR numbers), all-time running
   // count -- never resets -- so printed receipts never collide or repeat.
@@ -47,12 +86,9 @@ const createSale = asyncHandler(async (req, res) => {
 
   const sale = await Sale.create({
     invoiceNumber,
-    medicine: medicine._id,
-    medicineName: medicine.name,
+    items: saleItems,
+    grandTotal,
     patient: patient._id,
-    quantity: qty,
-    unitPrice,
-    totalAmount,
     soldBy: req.user.id,
   });
 
@@ -61,7 +97,7 @@ const createSale = asyncHandler(async (req, res) => {
     { path: 'soldBy', select: 'fullName' },
   ]);
 
-  res.status(201).json({ sale: populated, medicine: updatedMedicine });
+  res.status(201).json({ sale: populated, medicines: updatedMedicines });
 });
 
 const getSales = asyncHandler(async (req, res) => {
@@ -101,9 +137,9 @@ const getSalesStats = asyncHandler(async (req, res) => {
   const [todayAgg, totalAgg, lowStockMedicines] = await Promise.all([
     Sale.aggregate([
       { $match: { createdAt: { $gte: start, $lte: end } } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      { $group: { _id: null, total: { $sum: '$grandTotal' } } },
     ]),
-    Sale.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+    Sale.aggregate([{ $group: { _id: null, total: { $sum: '$grandTotal' } } }]),
     Medicine.find({ $expr: { $lte: ['$stockQuantity', '$lowStockThreshold'] } })
       .select('name stockQuantity lowStockThreshold')
       .sort({ stockQuantity: 1 }),

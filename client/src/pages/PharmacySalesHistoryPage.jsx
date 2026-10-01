@@ -45,7 +45,7 @@ export default function PharmacySalesHistoryPage() {
     load({});
   }
 
-  const totalAmount = sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+  const totalAmount = sales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
 
   return (
     <Layout>
@@ -98,19 +98,16 @@ export default function PharmacySalesHistoryPage() {
                     Date
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Medicine
+                    Medicines
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Patient
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Qty
+                    Items
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Unit Price
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Total
+                    Grand Total
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Sold By
@@ -126,15 +123,20 @@ export default function PharmacySalesHistoryPage() {
                     <td className="whitespace-nowrap px-4 py-3 text-gray-600">
                       {new Date(s.createdAt).toLocaleString([], { timeZone: 'Asia/Karachi' })}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-900">{s.medicineName}</td>
+                    <td className="max-w-[18rem] px-4 py-3 text-gray-900">
+                      {(s.items || []).map((item) => item.medicineName).join(', ')}
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-900">
                       {s.patient?.fullName}
                       <span className="ml-1 text-xs text-gray-400">({s.patient?.mrNumber})</span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">{s.quantity}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatMoney(s.unitPrice)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+                      <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-200">
+                        {s.items?.length || 0} {s.items?.length === 1 ? 'item' : 'items'}
+                      </span>
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 font-semibold text-gray-900">
-                      {formatMoney(s.totalAmount)}
+                      {formatMoney(s.grandTotal)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-600">{s.soldBy?.fullName || '-'}</td>
                   </tr>

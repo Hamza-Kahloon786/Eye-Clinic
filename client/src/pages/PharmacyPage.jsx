@@ -8,7 +8,7 @@ import Loader from '../components/common/Loader';
 import Modal from '../components/common/Modal';
 import DataTable, { EmptyState } from '../components/common/DataTable';
 import Pagination from '../components/common/Pagination';
-import SellMedicineModal from '../components/pharmacy/SellMedicineModal';
+import SellModal from '../components/pharmacy/SellModal';
 import PharmacySlip from '../components/pharmacy/PharmacySlip';
 import { useAuth } from '../auth/AuthContext';
 import { getMedicines, createMedicine, updateMedicine, deleteMedicine } from '../api/medicineApi';
@@ -59,7 +59,7 @@ export default function PharmacyPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [sellingMedicine, setSellingMedicine] = useState(null);
+  const [showSellModal, setShowSellModal] = useState(false);
   const [printedSale, setPrintedSale] = useState(null);
 
   async function loadMedicines() {
@@ -165,9 +165,11 @@ export default function PharmacyPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSold(sale, updatedMedicine) {
-    setMedicines((prev) => prev.map((m) => (m._id === updatedMedicine._id ? updatedMedicine : m)));
-    setSellingMedicine(null);
+  function handleSold(sale, updatedMedicines) {
+    setMedicines((prev) =>
+      prev.map((m) => updatedMedicines.find((u) => u._id === m._id) || m)
+    );
+    setShowSellModal(false);
     setPrintedSale(sale);
   }
 
@@ -181,11 +183,16 @@ export default function PharmacyPage() {
             </span>
             Pharmacy
           </h1>
-          {canManage && (
-            <Button icon={Plus} onClick={openAdd}>
-              Add Medicine
+          <div className="flex gap-2">
+            <Button icon={ShoppingCart} onClick={() => setShowSellModal(true)}>
+              Sell
             </Button>
-          )}
+            {canManage && (
+              <Button variant="secondary" icon={Plus} onClick={openAdd}>
+                Add Medicine
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="max-w-sm">
@@ -224,7 +231,7 @@ export default function PharmacyPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Stock
                   </th>
-                  <th className="px-4 py-3"></th>
+                  {canManage && <th className="px-4 py-3"></th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
@@ -241,28 +248,18 @@ export default function PharmacyPage() {
                     <td className="whitespace-nowrap px-4 py-3">
                       <StockBadge quantity={m.stockQuantity} threshold={m.lowStockThreshold} />
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="secondary"
-                          icon={ShoppingCart}
-                          disabled={!m.stockQuantity}
-                          onClick={() => setSellingMedicine(m)}
-                        >
-                          Sell
-                        </Button>
-                        {canManage && (
-                          <>
-                            <Button variant="secondary" icon={Pencil} onClick={() => openEdit(m)}>
-                              Edit
-                            </Button>
-                            <Button variant="danger" icon={Trash2} onClick={() => setDeleteTarget(m)}>
-                              Delete
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                    {canManage && (
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="secondary" icon={Pencil} onClick={() => openEdit(m)}>
+                            Edit
+                          </Button>
+                          <Button variant="danger" icon={Trash2} onClick={() => setDeleteTarget(m)}>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -377,7 +374,12 @@ export default function PharmacyPage() {
         )}
       </Modal>
 
-      <SellMedicineModal medicine={sellingMedicine} onClose={() => setSellingMedicine(null)} onSold={handleSold} />
+      <SellModal
+        open={showSellModal}
+        medicines={medicines}
+        onClose={() => setShowSellModal(false)}
+        onSold={handleSold}
+      />
 
       <Modal open={!!printedSale} onClose={() => setPrintedSale(null)} title="Sale Receipt">
         {printedSale && <PharmacySlip sale={printedSale} onClose={() => setPrintedSale(null)} />}

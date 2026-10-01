@@ -31,18 +31,14 @@ export default function PharmacySlip({ sale, onClose }) {
 
   const { date, time } = formatSlipDateTime(new Date(sale.createdAt || Date.now()));
   const patient = sale.patient;
-  // Single-item sale today, but the table/summary is built to extend cleanly to
-  // multiple line items (e.g. a future multi-medicine checkout) without a rewrite.
-  const items = [
-    {
-      name: sale.medicineName,
-      rate: sale.unitPrice,
-      qty: sale.quantity,
-      discPercent: 0,
-      total: sale.totalAmount,
-    },
-  ];
-  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const items = (sale.items || []).map((item) => ({
+    name: item.medicineName,
+    rate: item.unitPrice,
+    qty: item.quantity,
+    discPercent: 0,
+    total: item.totalAmount,
+  }));
+  const subtotal = sale.grandTotal ?? items.reduce((sum, item) => sum + item.total, 0);
   const discTotal = 0;
   const previousBalance = 0;
   const netTotal = subtotal - discTotal + previousBalance;
