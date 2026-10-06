@@ -6,7 +6,8 @@ import Button from '../common/Button';
 import { createRecord } from '../../api/recordApi';
 
 const EMPTY_MEDICAL_HISTORY = { dm: false, htn: false, ihd: false, ckd: false };
-const EMPTY_EYE = { sph: '', cyl: '', axis: '', va: '' };
+const EMPTY_VISION = { sph: '', cyl: '', axis: '', va: '' };
+const EMPTY_EYE = { dv: EMPTY_VISION, nv: EMPTY_VISION };
 const LENS_TYPES = ['Single Vision', 'Bifocal', 'Progressive', 'Reading', 'Anti-Glare'];
 
 const MEDICAL_HISTORY_OPTIONS = [
@@ -15,6 +16,20 @@ const MEDICAL_HISTORY_OPTIONS = [
   { key: 'ihd', label: 'IHD (Ischemic Heart Disease)' },
   { key: 'ckd', label: 'CKD (Chronic Kidney Disease)' },
 ];
+
+function VisionRow({ label, vision, onChange }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</span>
+      <div className="grid grid-cols-4 gap-2">
+        <Input label="SPH" value={vision.sph} onChange={(e) => onChange('sph', e.target.value)} />
+        <Input label="CYL" value={vision.cyl} onChange={(e) => onChange('cyl', e.target.value)} />
+        <Input label="AXIS" value={vision.axis} onChange={(e) => onChange('axis', e.target.value)} />
+        <Input label="VA" value={vision.va} onChange={(e) => onChange('va', e.target.value)} />
+      </div>
+    </div>
+  );
+}
 
 const EMPTY_FORM = {
   weight: '',
@@ -37,8 +52,14 @@ function formFromRecord(record, suggestion) {
     medicalHistory: { ...EMPTY_MEDICAL_HISTORY, ...(record.medicalHistory || {}) },
     finding: record.finding || '',
     treatment: record.treatment || '',
-    rightEye: { ...EMPTY_EYE, ...(suggestion?.rightEye || {}) },
-    leftEye: { ...EMPTY_EYE, ...(suggestion?.leftEye || {}) },
+    rightEye: {
+      dv: { ...EMPTY_VISION, ...(suggestion?.rightEye?.dv || {}) },
+      nv: { ...EMPTY_VISION, ...(suggestion?.rightEye?.nv || {}) },
+    },
+    leftEye: {
+      dv: { ...EMPTY_VISION, ...(suggestion?.leftEye?.dv || {}) },
+      nv: { ...EMPTY_VISION, ...(suggestion?.leftEye?.nv || {}) },
+    },
     lensType: suggestion?.lensType || '',
   };
 }
@@ -72,8 +93,11 @@ export default function ClinicalRecordForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function updateEye(eyeKey, field, value) {
-    setForm((prev) => ({ ...prev, [eyeKey]: { ...prev[eyeKey], [field]: value } }));
+  function updateEye(eyeKey, rowKey, field, value) {
+    setForm((prev) => ({
+      ...prev,
+      [eyeKey]: { ...prev[eyeKey], [rowKey]: { ...prev[eyeKey][rowKey], [field]: value } },
+    }));
   }
 
   function toggleMedicalHistory(key) {
@@ -179,55 +203,15 @@ export default function ClinicalRecordForm({
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-gray-700">Glasses Number (Eye Refraction)</span>
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3">
+          <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Right Eye</h4>
-            <div className="grid grid-cols-4 gap-2">
-              <Input
-                label="SPH"
-                value={form.rightEye.sph}
-                onChange={(e) => updateEye('rightEye', 'sph', e.target.value)}
-              />
-              <Input
-                label="CYL"
-                value={form.rightEye.cyl}
-                onChange={(e) => updateEye('rightEye', 'cyl', e.target.value)}
-              />
-              <Input
-                label="AXIS"
-                value={form.rightEye.axis}
-                onChange={(e) => updateEye('rightEye', 'axis', e.target.value)}
-              />
-              <Input
-                label="VA"
-                value={form.rightEye.va}
-                onChange={(e) => updateEye('rightEye', 'va', e.target.value)}
-              />
-            </div>
+            <VisionRow label="Distance (DV)" vision={form.rightEye.dv} onChange={(field, value) => updateEye('rightEye', 'dv', field, value)} />
+            <VisionRow label="Near (NV)" vision={form.rightEye.nv} onChange={(field, value) => updateEye('rightEye', 'nv', field, value)} />
           </div>
-          <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3">
+          <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Left Eye</h4>
-            <div className="grid grid-cols-4 gap-2">
-              <Input
-                label="SPH"
-                value={form.leftEye.sph}
-                onChange={(e) => updateEye('leftEye', 'sph', e.target.value)}
-              />
-              <Input
-                label="CYL"
-                value={form.leftEye.cyl}
-                onChange={(e) => updateEye('leftEye', 'cyl', e.target.value)}
-              />
-              <Input
-                label="AXIS"
-                value={form.leftEye.axis}
-                onChange={(e) => updateEye('leftEye', 'axis', e.target.value)}
-              />
-              <Input
-                label="VA"
-                value={form.leftEye.va}
-                onChange={(e) => updateEye('leftEye', 'va', e.target.value)}
-              />
-            </div>
+            <VisionRow label="Distance (DV)" vision={form.leftEye.dv} onChange={(field, value) => updateEye('leftEye', 'dv', field, value)} />
+            <VisionRow label="Near (NV)" vision={form.leftEye.nv} onChange={(field, value) => updateEye('leftEye', 'nv', field, value)} />
           </div>
         </div>
       </div>

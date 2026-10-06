@@ -5,21 +5,39 @@ import Input from '../common/Input';
 import Button from '../common/Button';
 import { createSuggestion, updateSuggestion } from '../../api/glassesApi';
 
-const EMPTY_EYE = { sph: '', cyl: '', axis: '' };
+const EMPTY_VISION = { sph: '', cyl: '', axis: '' };
 
 const LENS_TYPES = ['Single Vision', 'Bifocal', 'Progressive', 'Reading', 'Anti-Glare'];
+
+function mergeEye(eye) {
+  return {
+    dv: { ...EMPTY_VISION, ...(eye?.dv || {}) },
+    nv: { ...EMPTY_VISION, ...(eye?.nv || {}) },
+  };
+}
+
+function VisionRow({ label, vision, onChange }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</span>
+      <Input label="SPH" value={vision.sph} onChange={(e) => onChange('sph', e.target.value)} placeholder="e.g. -1.50" />
+      <Input label="CYL" value={vision.cyl} onChange={(e) => onChange('cyl', e.target.value)} placeholder="e.g. -0.75" />
+      <Input label="AXIS" value={vision.axis} onChange={(e) => onChange('axis', e.target.value)} placeholder="e.g. 90" />
+    </div>
+  );
+}
 
 export default function GlassesSuggestionForm({ patientId, tokenId, suggestion, onSaved, onCancel }) {
   const isEditing = !!suggestion;
 
-  const [rightEye, setRightEye] = useState(suggestion?.rightEye || EMPTY_EYE);
-  const [leftEye, setLeftEye] = useState(suggestion?.leftEye || EMPTY_EYE);
+  const [rightEye, setRightEye] = useState(mergeEye(suggestion?.rightEye));
+  const [leftEye, setLeftEye] = useState(mergeEye(suggestion?.leftEye));
   const [lensType, setLensType] = useState(suggestion?.lensType || LENS_TYPES[0]);
   const [frameNote, setFrameNote] = useState(suggestion?.frameNote || '');
   const [saving, setSaving] = useState(false);
 
-  function updateEye(setter, field, value) {
-    setter((prev) => ({ ...prev, [field]: value }));
+  function updateEye(setter, rowKey, field, value) {
+    setter((prev) => ({ ...prev, [rowKey]: { ...prev[rowKey], [field]: value } }));
   }
 
   async function handleSubmit(e) {
@@ -42,48 +60,16 @@ export default function GlassesSuggestionForm({ patientId, tokenId, suggestion, 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Right Eye</h4>
-          <Input
-            label="SPH"
-            value={rightEye.sph}
-            onChange={(e) => updateEye(setRightEye, 'sph', e.target.value)}
-            placeholder="e.g. -1.50"
-          />
-          <Input
-            label="CYL"
-            value={rightEye.cyl}
-            onChange={(e) => updateEye(setRightEye, 'cyl', e.target.value)}
-            placeholder="e.g. -0.75"
-          />
-          <Input
-            label="AXIS"
-            value={rightEye.axis}
-            onChange={(e) => updateEye(setRightEye, 'axis', e.target.value)}
-            placeholder="e.g. 90"
-          />
+          <VisionRow label="Distance (DV)" vision={rightEye.dv} onChange={(field, value) => updateEye(setRightEye, 'dv', field, value)} />
+          <VisionRow label="Near (NV)" vision={rightEye.nv} onChange={(field, value) => updateEye(setRightEye, 'nv', field, value)} />
         </div>
 
-        <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Left Eye</h4>
-          <Input
-            label="SPH"
-            value={leftEye.sph}
-            onChange={(e) => updateEye(setLeftEye, 'sph', e.target.value)}
-            placeholder="e.g. -1.25"
-          />
-          <Input
-            label="CYL"
-            value={leftEye.cyl}
-            onChange={(e) => updateEye(setLeftEye, 'cyl', e.target.value)}
-            placeholder="e.g. -0.50"
-          />
-          <Input
-            label="AXIS"
-            value={leftEye.axis}
-            onChange={(e) => updateEye(setLeftEye, 'axis', e.target.value)}
-            placeholder="e.g. 85"
-          />
+          <VisionRow label="Distance (DV)" vision={leftEye.dv} onChange={(field, value) => updateEye(setLeftEye, 'dv', field, value)} />
+          <VisionRow label="Near (NV)" vision={leftEye.nv} onChange={(field, value) => updateEye(setLeftEye, 'nv', field, value)} />
         </div>
       </div>
 

@@ -224,7 +224,7 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
                   <tr key={`r-row-${row}`}>
                     {EYE_COLUMNS.map((col) => (
                       <td key={`r-${row}-${col}`} className="h-6 border border-gray-400">
-                        {row === 'DV' ? suggestion?.rightEye?.[col.toLowerCase()] || '' : ''}
+                        {suggestion?.rightEye?.[row.toLowerCase()]?.[col.toLowerCase()] || ''}
                       </td>
                     ))}
                   </tr>
@@ -270,7 +270,7 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
                   <tr key={`l-row-${row}`}>
                     {EYE_COLUMNS.map((col) => (
                       <td key={`l-${row}-${col}`} className="h-6 border border-gray-400">
-                        {row === 'DV' ? suggestion?.leftEye?.[col.toLowerCase()] || '' : ''}
+                        {suggestion?.leftEye?.[row.toLowerCase()]?.[col.toLowerCase()] || ''}
                       </td>
                     ))}
                   </tr>
