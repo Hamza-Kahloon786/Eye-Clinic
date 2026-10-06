@@ -16,6 +16,28 @@ function Field({ label, value }) {
   );
 }
 
+function formatVision(vision) {
+  if (!vision) return '';
+  return [vision.sph, vision.cyl, vision.axis].filter(Boolean).join(' / ');
+}
+
+function EyeField({ label, eye }) {
+  const dv = formatVision(eye?.dv);
+  const nv = formatVision(eye?.nv);
+  if (!dv && !nv) {
+    return <Field label={label} value="" />;
+  }
+  return (
+    <div>
+      <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">{label} (SPH / CYL / AXIS)</dt>
+      <dd className="mt-0.5 text-sm text-gray-900">
+        {dv && <div>DV: {dv}</div>}
+        {nv && <div>NV: {nv}</div>}
+      </dd>
+    </div>
+  );
+}
+
 export default function GlassesSuggestionDetailModal({ suggestion, editable = false, onClose, onUpdated }) {
   const [askingCost, setAskingCost] = useState(false);
   const [cost, setCost] = useState('');
@@ -69,8 +91,8 @@ export default function GlassesSuggestionDetailModal({ suggestion, editable = fa
         <section>
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-sky-600">Prescription</h3>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <Field label="Right Eye (SPH / CYL / AXIS)" value={[rightEye?.sph, rightEye?.cyl, rightEye?.axis].filter(Boolean).join(' / ')} />
-            <Field label="Left Eye (SPH / CYL / AXIS)" value={[leftEye?.sph, leftEye?.cyl, leftEye?.axis].filter(Boolean).join(' / ')} />
+            <EyeField label="Right Eye" eye={rightEye} />
+            <EyeField label="Left Eye" eye={leftEye} />
             <Field label="Lens Type" value={suggestion.lensType} />
             <Field label="Suggested By" value={suggestion.suggestedBy?.fullName} />
             <div className="col-span-2">

@@ -4,6 +4,13 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const STATUSES = ['suggested', 'in-progress', 'completed', 'cancelled', 'delayed'];
 
+function buildEyeField(eye) {
+  return {
+    dv: { sph: eye?.dv?.sph, cyl: eye?.dv?.cyl, axis: eye?.dv?.axis, va: eye?.dv?.va },
+    nv: { sph: eye?.nv?.sph, cyl: eye?.nv?.cyl, axis: eye?.nv?.axis, va: eye?.nv?.va },
+  };
+}
+
 const createSuggestion = asyncHandler(async (req, res) => {
   const { patientId, tokenId, rightEye, leftEye, lensType, frameNote } = req.body;
 
@@ -20,16 +27,8 @@ const createSuggestion = asyncHandler(async (req, res) => {
     patient: patient._id,
     token: tokenId || undefined,
     suggestedBy: req.user.id,
-    rightEye: {
-      sph: rightEye?.sph,
-      cyl: rightEye?.cyl,
-      axis: rightEye?.axis,
-    },
-    leftEye: {
-      sph: leftEye?.sph,
-      cyl: leftEye?.cyl,
-      axis: leftEye?.axis,
-    },
+    rightEye: buildEyeField(rightEye),
+    leftEye: buildEyeField(leftEye),
     lensType,
     frameNote,
   });
@@ -76,8 +75,8 @@ const updateSuggestion = asyncHandler(async (req, res) => {
   const { rightEye, leftEye, lensType, frameNote } = req.body;
 
   const fields = {
-    rightEye: { sph: rightEye?.sph, cyl: rightEye?.cyl, axis: rightEye?.axis },
-    leftEye: { sph: leftEye?.sph, cyl: leftEye?.cyl, axis: leftEye?.axis },
+    rightEye: buildEyeField(rightEye),
+    leftEye: buildEyeField(leftEye),
     lensType,
     frameNote,
   };

@@ -7,10 +7,17 @@ import Button from '../common/Button';
 
 const PAGE_SIZE = 10;
 
+function formatVision(vision) {
+  if (!vision) return '';
+  return [vision.sph, vision.cyl, vision.axis].filter(Boolean).join(' / ');
+}
+
 function formatEye(eye) {
-  if (!eye) return '-';
-  const parts = [eye.sph, eye.cyl, eye.axis].filter(Boolean);
-  return parts.length ? parts.join(' / ') : '-';
+  const dv = formatVision(eye?.dv);
+  const nv = formatVision(eye?.nv);
+  if (!dv && !nv) return '-';
+  if (dv && nv) return `${dv} + NV`;
+  return dv || nv;
 }
 
 export default function GlassesSuggestionsTable({

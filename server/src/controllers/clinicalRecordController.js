@@ -5,8 +5,19 @@ const GlassesSuggestion = require('../models/GlassesSuggestion');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTodayDateString, getNowTimeString } = require('../utils/getTodayDateString');
 
+function hasAnyVisionValue(vision) {
+  return !!(vision?.sph || vision?.cyl || vision?.axis || vision?.va);
+}
+
 function hasAnyEyeValue(eye) {
-  return !!(eye?.sph || eye?.cyl || eye?.axis || eye?.va);
+  return hasAnyVisionValue(eye?.dv) || hasAnyVisionValue(eye?.nv);
+}
+
+function buildEyeField(eye) {
+  return {
+    dv: { sph: eye?.dv?.sph, cyl: eye?.dv?.cyl, axis: eye?.dv?.axis, va: eye?.dv?.va },
+    nv: { sph: eye?.nv?.sph, cyl: eye?.nv?.cyl, axis: eye?.nv?.axis, va: eye?.nv?.va },
+  };
 }
 
 const createRecord = asyncHandler(async (req, res) => {
@@ -84,8 +95,8 @@ const createRecord = asyncHandler(async (req, res) => {
   // entry point, no duplicate data between the consultation slip and the Optical portal.
   if (tokenId && (hasAnyEyeValue(rightEye) || hasAnyEyeValue(leftEye) || lensType)) {
     const eyeFields = {
-      rightEye: { sph: rightEye?.sph, cyl: rightEye?.cyl, axis: rightEye?.axis, va: rightEye?.va },
-      leftEye: { sph: leftEye?.sph, cyl: leftEye?.cyl, axis: leftEye?.axis, va: leftEye?.va },
+      rightEye: buildEyeField(rightEye),
+      leftEye: buildEyeField(leftEye),
       lensType,
     };
 

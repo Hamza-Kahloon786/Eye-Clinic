@@ -1,11 +1,21 @@
 const mongoose = require('mongoose');
 
-const eyeRefractionSchema = new mongoose.Schema(
+// One set of refraction values -- used for both Distance Vision (DV) and Near
+// Vision (NV), since a patient can need a different correction for each.
+const visionReadingSchema = new mongoose.Schema(
   {
     sph: { type: String, trim: true },
     cyl: { type: String, trim: true },
     axis: { type: String, trim: true },
     va: { type: String, trim: true }, // Visual Acuity, e.g. "6/6"
+  },
+  { _id: false }
+);
+
+const eyeRefractionSchema = new mongoose.Schema(
+  {
+    dv: { type: visionReadingSchema, default: () => ({}) },
+    nv: { type: visionReadingSchema, default: () => ({}) },
   },
   { _id: false }
 );
