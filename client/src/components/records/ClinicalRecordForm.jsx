@@ -5,7 +5,7 @@ import Input from '../common/Input';
 import Button from '../common/Button';
 import { createRecord, getRecordSuggestions } from '../../api/recordApi';
 
-const EMPTY_SUGGESTIONS = { visualAcuity: [], finding: [], treatment: [] };
+const EMPTY_SUGGESTIONS = { visualAcuity: [], presentingComplaints: [], finding: [], treatment: [] };
 // Standard Snellen chart readings, best to worst, then Counting Fingers /
 // Hand Movements / Perception of Light. Always offered first, in this order.
 const STANDARD_VA = ['6/6', '6/9', '6/12', '6/15', '6/18', '6/24', '6/36', '6/60', 'CF', 'HM', 'PL'];
@@ -48,6 +48,7 @@ const EMPTY_FORM = {
   allergy: '',
   visualAcuity: '',
   medicalHistory: EMPTY_MEDICAL_HISTORY,
+  presentingComplaints: '',
   finding: '',
   treatment: '',
   rightEye: EMPTY_EYE,
@@ -62,6 +63,7 @@ function formFromRecord(record, suggestion) {
     allergy: record.allergy || '',
     visualAcuity: record.visualAcuity || '',
     medicalHistory: { ...EMPTY_MEDICAL_HISTORY, ...(record.medicalHistory || {}) },
+    presentingComplaints: record.presentingComplaints || '',
     finding: record.finding || '',
     treatment: record.treatment || '',
     rightEye: {
@@ -154,6 +156,7 @@ export default function ClinicalRecordForm({
         allergy: form.allergy,
         visualAcuity: form.visualAcuity,
         medicalHistory: form.medicalHistory,
+        presentingComplaints: form.presentingComplaints,
         finding: form.finding,
         treatment: form.treatment,
         rightEye: form.rightEye,
@@ -203,6 +206,19 @@ export default function ClinicalRecordForm({
       </datalist>
       <datalist id="eye-va-options">
         {STANDARD_VA.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
+      <Input
+        label="Presenting Complaints"
+        value={form.presentingComplaints}
+        onChange={(e) => update('presentingComplaints', e.target.value)}
+        placeholder="e.g. Blurred vision, redness, watering"
+        list="complaint-suggestions"
+        autoComplete="off"
+      />
+      <datalist id="complaint-suggestions">
+        {suggestions.presentingComplaints.map((value) => (
           <option key={value} value={value} />
         ))}
       </datalist>

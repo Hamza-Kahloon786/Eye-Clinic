@@ -60,6 +60,7 @@ export default function RecordDetailModal({ record, onClose }) {
               <Field label="Allergy" value={record.allergy} />
               <MedicalHistoryField medicalHistory={record.medicalHistory} />
               <Field label="Diagnosis" value={record.diagnosis} />
+              <Field label="Presenting Complaints" value={record.presentingComplaints} />
               <Field label="Finding" value={record.finding} />
               <Field label="Treatment" value={record.treatment} />
             </dl>

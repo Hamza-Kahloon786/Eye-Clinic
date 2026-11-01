@@ -27,6 +27,7 @@ const createRecord = asyncHandler(async (req, res) => {
     weight,
     allergy,
     visualAcuity,
+    presentingComplaints,
     medicalHistory,
     symptomHistoryCondition,
     finding,
@@ -59,6 +60,7 @@ const createRecord = asyncHandler(async (req, res) => {
     weight: weight || undefined,
     allergy,
     visualAcuity,
+    presentingComplaints,
     medicalHistory: {
       dm: !!medicalHistory?.dm,
       htn: !!medicalHistory?.htn,
@@ -223,7 +225,7 @@ const getRecordByToken = asyncHandler(async (req, res) => {
   res.json(record);
 });
 
-const SUGGESTION_FIELDS = ['visualAcuity', 'finding', 'treatment'];
+const SUGGESTION_FIELDS = ['visualAcuity', 'presentingComplaints', 'finding', 'treatment'];
 const SUGGESTION_LIMIT = 50;
 
 // Previously entered values per field, most-used first, so the doctor can pick

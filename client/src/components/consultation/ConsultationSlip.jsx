@@ -180,7 +180,7 @@ export default function ConsultationSlip({ token, visitNumber, onClose, onDiagno
             <Field label="V.A (Visual Acuity)" value={record?.visualAcuity} />
             <WrappingField label="Allergies" value={record?.allergy || DEFAULT_VITALS.allergy} />
             <div className="flex flex-col gap-6 pt-2">
-              <BlankLine label="Presenting Complaints" />
+              <WrappingField label="Presenting Complaints" value={record?.presentingComplaints} />
               <MedicalHistoryRow medicalHistory={record?.medicalHistory} />
               <WrappingField label="Findings" value={record?.finding} />
               <Field label="Optical" value={suggestion?.lensType} />

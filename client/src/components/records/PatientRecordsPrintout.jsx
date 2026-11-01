@@ -105,6 +105,7 @@ export default function PatientRecordsPrintout({ patient, records }) {
             <div className="sm:col-span-2">
               <MedicalHistoryRow medicalHistory={r.medicalHistory} />
             </div>
+            <WrappingField label="Presenting Complaints" value={r.presentingComplaints} />
             <WrappingField label="Finding" value={r.finding} />
           </div>
           {r.treatment && (
