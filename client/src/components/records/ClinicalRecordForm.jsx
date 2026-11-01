@@ -6,6 +6,9 @@ import Button from '../common/Button';
 import { createRecord, getRecordSuggestions } from '../../api/recordApi';
 
 const EMPTY_SUGGESTIONS = { visualAcuity: [], finding: [], treatment: [] };
+// Standard Snellen chart readings, best to worst, then Counting Fingers /
+// Hand Movements / Perception of Light. Always offered first, in this order.
+const STANDARD_VA = ['6/6', '6/9', '6/12', '6/15', '6/18', '6/24', '6/36', '6/60', 'CF', 'HM', 'PL'];
 const MAX_TREATMENT_SUGGESTIONS = 5;
 
 const EMPTY_MEDICAL_HISTORY = { dm: false, htn: false, ihd: false, ckd: false };
@@ -28,7 +31,13 @@ function VisionRow({ label, vision, onChange }) {
         <Input label="SPH" value={vision.sph} onChange={(e) => onChange('sph', e.target.value)} />
         <Input label="CYL" value={vision.cyl} onChange={(e) => onChange('cyl', e.target.value)} />
         <Input label="AXIS" value={vision.axis} onChange={(e) => onChange('axis', e.target.value)} />
-        <Input label="VA" value={vision.va} onChange={(e) => onChange('va', e.target.value)} />
+        <Input
+          label="VA"
+          value={vision.va}
+          onChange={(e) => onChange('va', e.target.value)}
+          list="eye-va-options"
+          autoComplete="off"
+        />
       </div>
     </div>
   );
@@ -95,6 +104,12 @@ export default function ClinicalRecordForm({
   useEffect(() => {
     setForm(formFromRecord(initialRecord, initialSuggestion));
   }, [initialRecord, initialSuggestion]);
+
+  const standardVaKeys = new Set(STANDARD_VA.map((v) => v.toLowerCase()));
+  const vaOptions = [
+    ...STANDARD_VA,
+    ...suggestions.visualAcuity.filter((v) => !standardVaKeys.has(v.toLowerCase())),
+  ];
 
   const treatmentQuery = form.treatment.trim().toLowerCase();
   const treatmentMatches = suggestions.treatment
@@ -182,7 +197,12 @@ export default function ClinicalRecordForm({
         autoComplete="off"
       />
       <datalist id="va-suggestions">
-        {suggestions.visualAcuity.map((value) => (
+        {vaOptions.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
+      <datalist id="eye-va-options">
+        {STANDARD_VA.map((value) => (
           <option key={value} value={value} />
         ))}
       </datalist>
