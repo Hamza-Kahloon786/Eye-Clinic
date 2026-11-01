@@ -16,6 +16,7 @@ export default function TokenQueueTable({ tokens, showActions = false, onAdvance
       <thead className="bg-gray-50">
         <tr>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Token #</th>
+          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">MR #</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Patient</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
             Age / Gender
@@ -30,6 +31,7 @@ export default function TokenQueueTable({ tokens, showActions = false, onAdvance
         {tokens.map((t) => (
           <tr key={t._id} className="transition-colors duration-150 hover:bg-sky-50/40">
             <td className="px-4 py-3 text-lg font-bold text-sky-700">{t.tokenNumber}</td>
+            <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-700">{t.patient.mrNumber}</td>
             <td className="px-4 py-3 text-gray-900">{t.patient.fullName}</td>
             <td className="px-4 py-3 text-gray-600">
               {t.patient.age} / {t.patient.gender}
