@@ -91,6 +91,7 @@ export default function DoctorAppointmentsView({ queue }) {
       <thead className="bg-gray-50">
         <tr>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Time</th>
+          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">MR #</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Patient</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
             Age / Gender
@@ -107,6 +108,7 @@ export default function DoctorAppointmentsView({ queue }) {
             <td className="px-4 py-3 text-gray-600">
               {new Date(row.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </td>
+            <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-700">{row.patient.mrNumber}</td>
             <td className="px-4 py-3 text-gray-900">{row.patient.fullName}</td>
             <td className="px-4 py-3 text-gray-600">
               {row.patient.age} / {row.patient.gender}

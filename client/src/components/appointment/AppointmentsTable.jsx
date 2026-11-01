@@ -13,6 +13,7 @@ export default function AppointmentsTable({ appointments, onCheckIn, onCancel })
       <thead className="bg-gray-50">
         <tr>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Time</th>
+          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">MR #</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Patient</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Phone</th>
           <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</th>
@@ -24,6 +25,7 @@ export default function AppointmentsTable({ appointments, onCheckIn, onCancel })
         {appointments.map((a) => (
           <tr key={a._id} className="transition-colors duration-150 hover:bg-sky-50/40">
             <td className="px-4 py-3 font-semibold text-sky-700">{a.scheduledTime}</td>
+            <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-700">{a.patient.mrNumber}</td>
             <td className="px-4 py-3 text-gray-900">{a.patient.fullName}</td>
             <td className="px-4 py-3 text-gray-600">{a.patient.phone}</td>
             <td className="px-4 py-3 text-gray-600">{a.notes || '-'}</td>
