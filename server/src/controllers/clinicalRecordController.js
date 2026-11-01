@@ -223,6 +223,40 @@ const getRecordByToken = asyncHandler(async (req, res) => {
   res.json(record);
 });
 
+const SUGGESTION_FIELDS = ['visualAcuity', 'finding', 'treatment'];
+const SUGGESTION_LIMIT = 50;
+
+// Previously entered values per field, most-used first, so the doctor can pick
+// instead of retyping the same V.A / finding / prescription every visit.
+const getRecordSuggestions = asyncHandler(async (req, res) => {
+  const results = await Promise.all(
+    SUGGESTION_FIELDS.map((field) =>
+      ClinicalRecord.aggregate([
+        { $match: { [field]: { $type: 'string', $ne: '' } } },
+        { $group: { _id: { $trim: { input: `$${field}` } }, count: { $sum: 1 }, lastUsed: { $max: '$createdAt' } } },
+        { $match: { _id: { $ne: '' } } },
+        { $sort: { count: -1, lastUsed: -1 } },
+        { $limit: SUGGESTION_LIMIT },
+      ])
+    )
+  );
+
+  const suggestions = {};
+  SUGGESTION_FIELDS.forEach((field, i) => {
+    // Results are already most-used first, so the first spelling seen wins.
+    const seen = new Set();
+    suggestions[field] = results[i]
+      .map((r) => r._id)
+      .filter((value) => {
+        const key = value.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  });
+  res.json(suggestions);
+});
+
 const deleteRecord = asyncHandler(async (req, res) => {
   const record = await ClinicalRecord.findByIdAndDelete(req.params.id);
   if (!record) {
@@ -238,5 +272,6 @@ module.exports = {
   getPatientsWithRecords,
   getRecordById,
   getRecordByToken,
+  getRecordSuggestions,
   deleteRecord,
 };

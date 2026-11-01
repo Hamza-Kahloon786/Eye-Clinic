@@ -25,6 +25,11 @@ export async function getPatientRecords(patientId) {
   return data;
 }
 
+export async function getRecordSuggestions() {
+  const { data } = await axiosClient.get('/records/suggestions');
+  return data;
+}
+
 export async function deleteRecord(id) {
   const { data } = await axiosClient.delete(`/records/${id}`);
   return data;

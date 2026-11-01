@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Save, ClipboardList } from 'lucide-react';
+import { Save, ClipboardList, History } from 'lucide-react';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { createRecord } from '../../api/recordApi';
+import { createRecord, getRecordSuggestions } from '../../api/recordApi';
+
+const EMPTY_SUGGESTIONS = { visualAcuity: [], finding: [], treatment: [] };
+const MAX_TREATMENT_SUGGESTIONS = 5;
 
 const EMPTY_MEDICAL_HISTORY = { dm: false, htn: false, ihd: false, ckd: false };
 const EMPTY_VISION = { sph: '', cyl: '', axis: '', va: '' };
@@ -76,10 +79,27 @@ export default function ClinicalRecordForm({
 }) {
   const [form, setForm] = useState(() => formFromRecord(initialRecord, initialSuggestion));
   const [saving, setSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState(EMPTY_SUGGESTIONS);
+  const [treatmentFocused, setTreatmentFocused] = useState(false);
+
+  function loadSuggestions() {
+    getRecordSuggestions()
+      .then(setSuggestions)
+      .catch(() => {}); // suggestions are a convenience -- the form works without them
+  }
+
+  useEffect(() => {
+    loadSuggestions();
+  }, []);
 
   useEffect(() => {
     setForm(formFromRecord(initialRecord, initialSuggestion));
   }, [initialRecord, initialSuggestion]);
+
+  const treatmentQuery = form.treatment.trim().toLowerCase();
+  const treatmentMatches = suggestions.treatment
+    .filter((t) => t.toLowerCase() !== treatmentQuery && t.toLowerCase().includes(treatmentQuery))
+    .slice(0, MAX_TREATMENT_SUGGESTIONS);
 
   useEffect(() => {
     if (prefillTreatment == null) return;
@@ -129,6 +149,7 @@ export default function ClinicalRecordForm({
       const eyeValues = { rightEye: form.rightEye, leftEye: form.leftEye, lensType: form.lensType };
       setForm(formFromRecord(record, eyeValues));
       onSaved?.(record, eyeValues);
+      loadSuggestions(); // so what was just saved is suggested next time
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save record');
     } finally {
@@ -157,7 +178,14 @@ export default function ClinicalRecordForm({
         value={form.visualAcuity}
         onChange={(e) => update('visualAcuity', e.target.value)}
         placeholder="e.g. 6/6, 6/9"
+        list="va-suggestions"
+        autoComplete="off"
       />
+      <datalist id="va-suggestions">
+        {suggestions.visualAcuity.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-gray-700">Medical History</span>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -174,7 +202,18 @@ export default function ClinicalRecordForm({
           ))}
         </div>
       </div>
-      <Input label="Finding" value={form.finding} onChange={(e) => update('finding', e.target.value)} />
+      <Input
+        label="Finding"
+        value={form.finding}
+        onChange={(e) => update('finding', e.target.value)}
+        list="finding-suggestions"
+        autoComplete="off"
+      />
+      <datalist id="finding-suggestions">
+        {suggestions.finding.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
       <label className="flex flex-col gap-1.5 text-sm text-gray-700">
         <span className="font-medium text-gray-700">Optical (Lens Type)</span>
         <select
@@ -195,11 +234,36 @@ export default function ClinicalRecordForm({
         <textarea
           value={form.treatment}
           onChange={(e) => update('treatment', e.target.value)}
+          onFocus={() => setTreatmentFocused(true)}
+          onBlur={() => setTreatmentFocused(false)}
           rows={4}
           dir="auto"
           className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm transition-all duration-150 placeholder:text-gray-400 hover:border-gray-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
         />
       </label>
+      {treatmentFocused && treatmentMatches.length > 0 && (
+        <div className="-mt-1.5 flex flex-col gap-1.5 rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+          <span className="flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <History className="h-3.5 w-3.5" />
+            Previous prescriptions
+          </span>
+          {treatmentMatches.map((value) => (
+            <button
+              key={value}
+              type="button"
+              // mouseDown (not click) so the textarea's blur doesn't hide this list first
+              onMouseDown={(e) => {
+                e.preventDefault();
+                update('treatment', value);
+              }}
+              dir="auto"
+              className="line-clamp-3 whitespace-pre-line rounded-md border border-gray-100 px-2.5 py-2 text-left text-sm text-gray-800 transition-colors duration-150 hover:border-sky-200 hover:bg-sky-50"
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-gray-700">Glasses Number (Eye Refraction)</span>
         <div className="grid grid-cols-2 gap-3">
